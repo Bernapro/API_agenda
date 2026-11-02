@@ -12,12 +12,14 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import com.unach.enums.EstadoSesionEnum;
 
 @Entity
+@DynamicInsert
 @Table(name = "sesion")
 public class Sesion {
 
@@ -29,7 +31,7 @@ public class Sesion {
     @JoinColumn(name = "id_tarea", nullable = false)
     private Tarea tarea;
 
-    @Column(name = "fecha_programada", nullable = false)
+    @Column(name = "fecha_programada")
     private LocalDate fechaProgramada;
 
     @Column(name = "hora_inicio")

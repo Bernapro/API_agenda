@@ -14,7 +14,7 @@ public record ActividadPostDTO(
     TipoActividadEnum tipoActividad,
     RecurrenciaPostDTO recurrencia,
     List<RecordatorioPostDTO> recordatorios,
-    List<Integer> idEtiquetas,
+    List<EtiquetaPostDTO> etiquetas,
     List<NotaPostDTO> notas
 ) {
 }

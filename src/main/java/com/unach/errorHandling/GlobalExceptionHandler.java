@@ -28,6 +28,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorDetalles> manejarIllegalArgumentException(
+            IllegalArgumentException exception,
+            WebRequest webRequest) {
+
+        ErrorDetalles error = new ErrorDetalles(
+                LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+                "BAD_REQUEST"
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetalles> manejarExcepcionesGlobales(

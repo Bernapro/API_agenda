@@ -18,6 +18,6 @@ public record ContactoPostDTO(
     List<DireccionPostDTO> direcciones,
     List<NoTelefonicoPostDTO> noTelefonicos,
     List<CorreoElectronicoPostDTO> correosElectronicos,
-    List<Integer> idEtiquetas
+    List<EtiquetaPostDTO> etiquetas
 ) {
 }
