@@ -1,5 +1,6 @@
 package com.unach.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -84,7 +85,11 @@ public class EventoService {
     }
 
     @Transactional(readOnly = true)
-    public List<EventoGetResumenDTO> obtenerResumenEvento(Integer idRecibido, Integer limit) {
+    public List<EventoGetResumenDTO> obtenerResumenEvento(
+            Integer idRecibido,
+            Integer limit,
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin) {
         int ultimoId = 0;
         if (idRecibido != null) {
             if (idRecibido < 0) {
@@ -98,11 +103,21 @@ public class EventoService {
             throw new IllegalArgumentException("El límite debe ser mayor a 0.");
         }
 
-        Pageable pageable = PageRequest.of(0, limite);
-        if (ultimoId == 0) {
-            return eventoRepository.obtenerPrimerosResumen(pageable);
+        if (fechaInicio == null || fechaFin == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias para filtrar el resumen de eventos.");
         }
-        return eventoRepository.obtenerResumenDespuesDeId(ultimoId, pageable);
+        if (fechaFin.isBefore(fechaInicio)) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
+        }
+
+        Pageable pageable = PageRequest.of(0, limite);
+        List<Evento> eventos = (ultimoId == 0)
+                ? eventoRepository.obtenerPrimerosResumen(fechaInicio, fechaFin, pageable)
+                : eventoRepository.obtenerResumenDespuesDeId(ultimoId, fechaInicio, fechaFin, pageable);
+
+        return eventos.stream()
+                .map(this::mapearAResumenDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -115,6 +130,23 @@ public class EventoService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el evento con id: " + id));
 
         return mapearADTO(evento);
+    }
+
+    private EventoGetResumenDTO mapearAResumenDTO(Evento evento) {
+        Actividad actividad = evento.getActividad();
+        int cantidadInvitados = evento.getContactoEventos() != null ? evento.getContactoEventos().size() : 0;
+
+        return new EventoGetResumenDTO(
+                evento.getIdActividad(),
+                actividad.getTitulo(),
+                actividad.getHexColor(),
+                evento.getTodoElDia(),
+                evento.getDireccion(),
+                cantidadInvitados,
+                actividad.getFechaInicio(),
+                actividad.getFechaFin(),
+                etiquetaService.mapearADTOList(actividad.getEtiquetas())
+        );
     }
 
     private EventoGetDTO mapearADTO(Evento evento) {

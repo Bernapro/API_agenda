@@ -55,7 +55,11 @@ public class ActividadService {
     }
 
     @Transactional(readOnly = true)
-    public List<ActividadGetResumenDTO> obtenerResumenActividad(Integer idRecibido, Integer limit) {
+    public List<ActividadGetResumenDTO> obtenerResumenActividad(
+            Integer idRecibido,
+            Integer limit,
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin) {
         int ultimoId = 0;
         if (idRecibido != null) {
             if (idRecibido < 0) {
@@ -69,11 +73,18 @@ public class ActividadService {
             throw new IllegalArgumentException("El límite debe ser mayor a 0.");
         }
 
+        if (fechaInicio == null || fechaFin == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias para filtrar el resumen de actividades.");
+        }
+        if (fechaFin.isBefore(fechaInicio)) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
+        }
+
         Pageable pageable = PageRequest.of(0, limite);
         if (ultimoId == 0) {
-            return actividadRepository.obtenerPrimerasResumen(pageable);
+            return actividadRepository.obtenerPrimerasResumen(fechaInicio, fechaFin, pageable);
         }
-        return actividadRepository.obtenerResumenDespuesDeId(ultimoId, pageable);
+        return actividadRepository.obtenerResumenDespuesDeId(ultimoId, fechaInicio, fechaFin, pageable);
     }
 
     @Transactional(readOnly = true)

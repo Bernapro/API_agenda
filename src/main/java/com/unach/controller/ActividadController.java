@@ -1,6 +1,7 @@
 package com.unach.controller;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,8 +33,10 @@ public class ActividadController {
     @GetMapping("/cursor")
     public ResponseEntity<List<ActividadGetResumenDTO>> obtenerResumenActividad(
             @RequestParam(defaultValue = "0") Integer id,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        List<ActividadGetResumenDTO> resumen = actividadService.obtenerResumenActividad(id, limit);
+            @RequestParam(defaultValue = "10") Integer limit,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin) {
+        List<ActividadGetResumenDTO> resumen = actividadService.obtenerResumenActividad(id, limit, fechaInicio, fechaFin);
         return ResponseEntity.ok(resumen);
     }
 

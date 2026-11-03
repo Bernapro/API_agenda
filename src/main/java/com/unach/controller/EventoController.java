@@ -1,7 +1,9 @@
 package com.unach.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,8 +38,10 @@ public class EventoController {
     @GetMapping("/cursor")
     public ResponseEntity<List<EventoGetResumenDTO>> obtenerResumenEvento(
             @RequestParam(defaultValue = "0") Integer id,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        List<EventoGetResumenDTO> resumen = eventoService.obtenerResumenEvento(id, limit);
+            @RequestParam(defaultValue = "10") Integer limit,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin) {
+        List<EventoGetResumenDTO> resumen = eventoService.obtenerResumenEvento(id, limit, fechaInicio, fechaFin);
         return ResponseEntity.ok(resumen);
     }
 

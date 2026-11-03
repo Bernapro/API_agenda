@@ -1,5 +1,6 @@
 package com.unach.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -83,7 +84,11 @@ public class TareaService {
     }
 
     @Transactional(readOnly = true)
-    public List<TareaGetResumenDTO> obtenerResumenTarea(Integer idRecibido, Integer limit) {
+    public List<TareaGetResumenDTO> obtenerResumenTarea(
+            Integer idRecibido,
+            Integer limit,
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin) {
         int ultimoId = 0;
         if (idRecibido != null) {
             if (idRecibido < 0) {
@@ -97,11 +102,21 @@ public class TareaService {
             throw new IllegalArgumentException("El límite debe ser mayor a 0.");
         }
 
-        Pageable pageable = PageRequest.of(0, limite);
-        if (ultimoId == 0) {
-            return tareaRepository.obtenerPrimerasResumen(pageable);
+        if (fechaInicio == null || fechaFin == null) {
+            throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias para filtrar el resumen de tareas.");
         }
-        return tareaRepository.obtenerResumenDespuesDeId(ultimoId, pageable);
+        if (fechaFin.isBefore(fechaInicio)) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
+        }
+
+        Pageable pageable = PageRequest.of(0, limite);
+        List<Tarea> tareas = (ultimoId == 0)
+                ? tareaRepository.obtenerPrimerasResumen(fechaInicio, fechaFin, pageable)
+                : tareaRepository.obtenerResumenDespuesDeId(ultimoId, fechaInicio, fechaFin, pageable);
+
+        return tareas.stream()
+                .map(this::mapearAResumenDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -145,6 +160,21 @@ public class TareaService {
 
         Tarea tarea = obtenerEntidadPorId(dto.idActividad());
         return sesionService.registrarSesion(tarea, dto);
+    }
+
+    private TareaGetResumenDTO mapearAResumenDTO(Tarea tarea) {
+        Actividad actividad = tarea.getActividad();
+        return new TareaGetResumenDTO(
+                tarea.getIdActividad(),
+                actividad.getTitulo(),
+                actividad.getHexColor(),
+                actividad.getFechaInicio(),
+                actividad.getFechaFin(),
+                tarea.getFechaLimite(),
+                tarea.getEstado(),
+                tarea.getPrioridad(),
+                etiquetaService.mapearADTOList(actividad.getEtiquetas())
+        );
     }
 
     private TareaGetDTO mapearADTO(Tarea tarea) {

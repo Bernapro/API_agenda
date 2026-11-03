@@ -31,9 +31,14 @@ public interface ActividadRepository extends JpaRepository<Actividad, Integer> {
             a.id, a.titulo, a.hexColor, a.fechaInicio, a.fechaFin, a.tipoActividad
         )
         FROM Actividad a
+        WHERE a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
         ORDER BY a.id ASC
     """)
-    List<ActividadGetResumenDTO> obtenerPrimerasResumen(Pageable pageable);
+    List<ActividadGetResumenDTO> obtenerPrimerasResumen(
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin,
+            Pageable pageable
+    );
 
     @Query("""
         SELECT new com.unach.dto.ActividadGetResumenDTO(
@@ -41,9 +46,15 @@ public interface ActividadRepository extends JpaRepository<Actividad, Integer> {
         )
         FROM Actividad a
         WHERE a.id > :ultimoId
+          AND a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
         ORDER BY a.id ASC
     """)
-    List<ActividadGetResumenDTO> obtenerResumenDespuesDeId(@Param("ultimoId") Integer ultimoId, Pageable pageable);
+    List<ActividadGetResumenDTO> obtenerResumenDespuesDeId(
+            @Param("ultimoId") Integer ultimoId,
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin,
+            Pageable pageable
+    );
 
     @Query("""
         SELECT new com.unach.dto.ActividadGetResumenDTO(

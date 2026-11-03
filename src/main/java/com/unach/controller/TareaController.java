@@ -1,7 +1,9 @@
 package com.unach.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +41,10 @@ public class TareaController {
     @GetMapping("/cursor")
     public ResponseEntity<List<TareaGetResumenDTO>> obtenerResumenTarea(
             @RequestParam(defaultValue = "0") Integer id,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        List<TareaGetResumenDTO> resumen = tareaService.obtenerResumenTarea(id, limit);
+            @RequestParam(defaultValue = "10") Integer limit,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin) {
+        List<TareaGetResumenDTO> resumen = tareaService.obtenerResumenTarea(id, limit, fechaInicio, fechaFin);
         return ResponseEntity.ok(resumen);
     }
 

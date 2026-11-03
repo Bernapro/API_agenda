@@ -1,5 +1,6 @@
 package com.unach.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -9,34 +10,38 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.unach.dto.SubtareaGetDTO;
-import com.unach.dto.TareaGetResumenDTO;
 import com.unach.entity.Tarea;
 
 @Repository
 public interface TareaRepository extends JpaRepository<Tarea, Integer> {
 
     @Query("""
-        SELECT new com.unach.dto.TareaGetResumenDTO(
-            t.idActividad, a.titulo, a.descripcion, a.hexColor,
-            a.fechaInicio, a.fechaFin, t.fechaLimite, t.estado, t.prioridad
-        )
+        SELECT t
         FROM Tarea t
-        JOIN t.actividad a
+        JOIN FETCH t.actividad a
+        WHERE a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
         ORDER BY t.idActividad ASC
     """)
-    List<TareaGetResumenDTO> obtenerPrimerasResumen(Pageable pageable);
+    List<Tarea> obtenerPrimerasResumen(
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin,
+            Pageable pageable
+    );
 
     @Query("""
-        SELECT new com.unach.dto.TareaGetResumenDTO(
-            t.idActividad, a.titulo, a.descripcion, a.hexColor,
-            a.fechaInicio, a.fechaFin, t.fechaLimite, t.estado, t.prioridad
-        )
+        SELECT t
         FROM Tarea t
-        JOIN t.actividad a
+        JOIN FETCH t.actividad a
         WHERE t.idActividad > :ultimoId
+          AND a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
         ORDER BY t.idActividad ASC
     """)
-    List<TareaGetResumenDTO> obtenerResumenDespuesDeId(@Param("ultimoId") Integer ultimoId, Pageable pageable);
+    List<Tarea> obtenerResumenDespuesDeId(
+            @Param("ultimoId") Integer ultimoId,
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin,
+            Pageable pageable
+    );
 
     @Query("""
         SELECT new com.unach.dto.SubtareaGetDTO(
