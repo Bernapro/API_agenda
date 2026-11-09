@@ -28,4 +28,10 @@ public class EtiquetaController {
         List<EtiquetaGetDTO> etiquetas = etiquetaService.obtenerEtiquetas(id, limit);
         return ResponseEntity.ok(etiquetas);
     }
+
+    @GetMapping("/nombre")
+    public ResponseEntity<List<EtiquetaGetDTO>> buscarPorNombre(@RequestParam String nombre) {
+        List<EtiquetaGetDTO> etiquetas = etiquetaService.buscarPorNombre(nombre);
+        return ResponseEntity.ok(etiquetas);
+    }
 }

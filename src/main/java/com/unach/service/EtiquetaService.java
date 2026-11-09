@@ -46,6 +46,18 @@ public class EtiquetaService {
         return etiquetaRepository.obtenerEtiquetasDespuesDeId(ultimoId, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public List<EtiquetaGetDTO> buscarPorNombre(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre de la etiqueta a buscar es obligatorio.");
+        }
+        String nombreLimpio = nombre.trim();
+        if (nombreLimpio.length() > 50) {
+            throw new IllegalArgumentException("El nombre de la etiqueta no puede exceder 50 caracteres.");
+        }
+        return etiquetaRepository.buscarPorNombre(nombreLimpio);
+    }
+
     @Transactional
     public Set<Etiqueta> obtenerOCrearEtiquetas(List<EtiquetaPostDTO> etiquetasDto) {
         Set<Etiqueta> etiquetas = new HashSet<>();

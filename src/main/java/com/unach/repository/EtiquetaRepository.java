@@ -31,4 +31,12 @@ public interface EtiquetaRepository extends JpaRepository<Etiqueta, Integer> {
         ORDER BY e.id ASC
     """)
     List<EtiquetaGetDTO> obtenerEtiquetasDespuesDeId(@Param("ultimoId") Integer ultimoId, Pageable pageable);
+
+    @Query("""
+        SELECT new com.unach.dto.EtiquetaGetDTO(e.id, e.nombre, e.hexColor)
+        FROM Etiqueta e
+        WHERE LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))
+        ORDER BY e.nombre ASC
+    """)
+    List<EtiquetaGetDTO> buscarPorNombre(@Param("nombre") String nombre);
 }
