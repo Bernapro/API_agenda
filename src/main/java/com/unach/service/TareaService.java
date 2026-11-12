@@ -133,6 +133,36 @@ public class TareaService {
         return mapearADTO(obtenerEntidadPorId(id));
     }
 
+    @Transactional
+    public TareaGetDTO actualizarTarea(Integer id, TareaPostDTO dto) {
+        if (dto == null || dto.actividad() == null) {
+            throw new IllegalArgumentException("Los datos de la tarea y su actividad son obligatorios.");
+        }
+        if (dto.actividad().tipoActividad() != null && dto.actividad().tipoActividad() != TipoActividadEnum.TAREA) {
+            throw new IllegalArgumentException("El tipo de actividad para una tarea debe ser TAREA.");
+        }
+        if (dto.fechaLimite() != null && dto.actividad().fechaInicio() != null
+                && dto.fechaLimite().isBefore(dto.actividad().fechaInicio())) {
+            throw new IllegalArgumentException("La fecha límite de la tarea no puede ser anterior a la fecha de inicio de la actividad.");
+        }
+
+        Tarea tarea = obtenerEntidadPorId(id);
+
+        Tarea tareaPadre = null;
+        if (dto.idTareaPadre() != null) {
+            tareaPadre = obtenerEntidadPorId(dto.idTareaPadre());
+        }
+
+        actividadService.actualizarActividad(tarea.getActividad(), dto.actividad(), TipoActividadEnum.TAREA);
+
+        tarea.setFechaLimite(dto.fechaLimite());
+        tarea.setEstado(dto.estado() != null ? dto.estado() : EstadoTareaEnum.PENDIENTE);
+        tarea.setPrioridad(dto.prioridad() != null ? dto.prioridad() : PrioridadTareaEnum.MEDIA);
+        tarea.setTareaPadre(tareaPadre);
+
+        return mapearADTO(tareaRepository.save(tarea));
+    }
+
     @Transactional(readOnly = true)
     public List<SubtareaGetDTO> obtenerSubtareas(Integer idTareaPadre) {
         if (idTareaPadre == null || idTareaPadre <= 0) {

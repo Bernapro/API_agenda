@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.unach.dto.CorreoElectronicoGetDTO;
 import com.unach.dto.CorreoElectronicoPostDTO;
 import com.unach.entity.Contacto;
 import com.unach.entity.CorreoElectronico;
@@ -54,5 +55,31 @@ public class CorreoElectronicoService {
         }
 
         return correoElectronicoRepository.saveAll(correos);
+    }
+
+    @Transactional
+    public List<CorreoElectronico> reemplazarCorreosElectronicos(Contacto contacto, List<CorreoElectronicoPostDTO> correosDto) {
+        if (contacto == null || contacto.getId() == null) {
+            throw new IllegalArgumentException("El contacto debe existir antes de actualizar sus correos electrónicos.");
+        }
+        correoElectronicoRepository.eliminarPorIdContacto(contacto.getId());
+        correoElectronicoRepository.flush();
+        contacto.getCorreosElectronicos().clear();
+        List<CorreoElectronico> nuevos = guardarCorreosElectronicos(contacto, correosDto);
+        contacto.getCorreosElectronicos().addAll(nuevos);
+        return nuevos;
+    }
+
+    public List<CorreoElectronicoGetDTO> mapearADTOList(List<CorreoElectronico> correos) {
+        if (correos == null || correos.isEmpty()) {
+            return List.of();
+        }
+        return correos.stream()
+                .map(c -> new CorreoElectronicoGetDTO(
+                        c.getId() != null ? c.getId().getDisc() : null,
+                        c.getDireccion(),
+                        c.getTipo()
+                ))
+                .toList();
     }
 }

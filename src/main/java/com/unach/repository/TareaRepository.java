@@ -19,7 +19,8 @@ public interface TareaRepository extends JpaRepository<Tarea, Integer> {
         SELECT t
         FROM Tarea t
         JOIN FETCH t.actividad a
-        WHERE a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+        WHERE a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY t.idActividad ASC
     """)
     List<Tarea> obtenerPrimerasResumen(
@@ -33,7 +34,8 @@ public interface TareaRepository extends JpaRepository<Tarea, Integer> {
         FROM Tarea t
         JOIN FETCH t.actividad a
         WHERE t.idActividad > :ultimoId
-          AND a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+          AND a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY t.idActividad ASC
     """)
     List<Tarea> obtenerResumenDespuesDeId(

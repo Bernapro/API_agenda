@@ -20,12 +20,14 @@ import com.unach.entity.Actividad;
 import com.unach.entity.Evento;
 import com.unach.enums.TipoActividadEnum;
 import com.unach.errorHandling.Exception.ResourceNotFoundException;
+import com.unach.repository.ContactoEventoRepository;
 import com.unach.repository.EventoRepository;
 
 @Service
 public class EventoService {
 
     private final EventoRepository eventoRepository;
+    private final ContactoEventoRepository contactoEventoRepository;
     private final ActividadService actividadService;
     private final RecurrenciaService recurrenciaService;
     private final RecordatorioService recordatorioService;
@@ -35,6 +37,7 @@ public class EventoService {
 
     public EventoService(
             EventoRepository eventoRepository,
+            ContactoEventoRepository contactoEventoRepository,
             ActividadService actividadService,
             RecurrenciaService recurrenciaService,
             RecordatorioService recordatorioService,
@@ -42,6 +45,7 @@ public class EventoService {
             EtiquetaService etiquetaService,
             NotaService notaService) {
         this.eventoRepository = eventoRepository;
+        this.contactoEventoRepository = contactoEventoRepository;
         this.actividadService = actividadService;
         this.recurrenciaService = recurrenciaService;
         this.recordatorioService = recordatorioService;
@@ -130,6 +134,45 @@ public class EventoService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el evento con id: " + id));
 
         return mapearADTO(evento);
+    }
+
+    @Transactional
+    public EventoGetDTO actualizarEvento(Integer id, EventoPostDTO dto) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("El id del evento debe ser un entero positivo.");
+        }
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos del evento no pueden ser nulos.");
+        }
+        if (dto.actividad() == null) {
+            throw new IllegalArgumentException("Los datos de la actividad son obligatorios para actualizar un evento.");
+        }
+
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el evento con id: " + id));
+
+        Actividad actividad = actividadService.actualizarActividad(
+                evento.getActividad(),
+                dto.actividad(),
+                TipoActividadEnum.EVENTO
+        );
+
+        if (dto.recordatorios() != null && !dto.recordatorios().isEmpty()
+                && (dto.actividad().recordatorios() == null || dto.actividad().recordatorios().isEmpty())) {
+            recordatorioService.guardarRecordatorios(actividad, dto.recordatorios());
+        }
+
+        evento.setDireccion(dto.direccion());
+        evento.setTodoElDia(Boolean.TRUE.equals(dto.todoElDia()));
+
+        evento.getContactoEventos().clear();
+        contactoEventoRepository.eliminarPorIdEvento(id);
+        contactoEventoRepository.flush();
+        if (dto.contactosEventos() != null && !dto.contactosEventos().isEmpty()) {
+            contactoEventoService.guardarContactosEvento(evento, dto.contactosEventos());
+        }
+
+        return mapearADTO(eventoRepository.save(evento));
     }
 
     private EventoGetResumenDTO mapearAResumenDTO(Evento evento) {

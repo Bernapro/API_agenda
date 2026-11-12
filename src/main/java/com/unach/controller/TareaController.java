@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,6 +53,13 @@ public class TareaController {
     public ResponseEntity<TareaGetDTO> obtenerTarea(@PathVariable Integer id) {
         TareaGetDTO tarea = tareaService.obtenerTarea(id);
         return ResponseEntity.ok(tarea);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TareaGetDTO> actualizarTarea(
+            @PathVariable Integer id,
+            @RequestBody TareaPostDTO dto) {
+        return ResponseEntity.ok(tareaService.actualizarTarea(id, dto));
     }
 
     @GetMapping("/subtareas")

@@ -31,7 +31,8 @@ public interface ActividadRepository extends JpaRepository<Actividad, Integer> {
             a.id, a.titulo, a.hexColor, a.fechaInicio, a.fechaFin, a.tipoActividad
         )
         FROM Actividad a
-        WHERE a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+        WHERE a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY a.id ASC
     """)
     List<ActividadGetResumenDTO> obtenerPrimerasResumen(
@@ -46,7 +47,8 @@ public interface ActividadRepository extends JpaRepository<Actividad, Integer> {
         )
         FROM Actividad a
         WHERE a.id > :ultimoId
-          AND a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+          AND a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY a.id ASC
     """)
     List<ActividadGetResumenDTO> obtenerResumenDespuesDeId(
@@ -71,7 +73,8 @@ public interface ActividadRepository extends JpaRepository<Actividad, Integer> {
             a.id, a.titulo, a.hexColor, a.fechaInicio, a.fechaFin, a.tipoActividad
         )
         FROM Actividad a
-        WHERE a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+        WHERE a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY a.fechaInicio ASC, a.id ASC
     """)
     List<ActividadGetResumenDTO> obtenerPorRangoFechas(

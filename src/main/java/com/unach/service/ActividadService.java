@@ -18,6 +18,8 @@ import com.unach.entity.Etiqueta;
 import com.unach.enums.TipoActividadEnum;
 import com.unach.errorHandling.Exception.ResourceNotFoundException;
 import com.unach.repository.ActividadRepository;
+import com.unach.repository.RecordatorioRepository;
+import com.unach.repository.RecurrenciaRepository;
 
 @Service
 public class ActividadService {
@@ -26,6 +28,8 @@ public class ActividadService {
     private final EtiquetaService etiquetaService;
     private final RecurrenciaService recurrenciaService;
     private final RecordatorioService recordatorioService;
+    private final RecurrenciaRepository recurrenciaRepository;
+    private final RecordatorioRepository recordatorioRepository;
     private final NotaService notaService;
 
     public ActividadService(
@@ -33,11 +37,15 @@ public class ActividadService {
             EtiquetaService etiquetaService,
             RecurrenciaService recurrenciaService,
             RecordatorioService recordatorioService,
+            RecurrenciaRepository recurrenciaRepository,
+            RecordatorioRepository recordatorioRepository,
             NotaService notaService) {
         this.actividadRepository = actividadRepository;
         this.etiquetaService = etiquetaService;
         this.recurrenciaService = recurrenciaService;
         this.recordatorioService = recordatorioService;
+        this.recurrenciaRepository = recurrenciaRepository;
+        this.recordatorioRepository = recordatorioRepository;
         this.notaService = notaService;
     }
 
@@ -179,5 +187,73 @@ public class ActividadService {
         }
 
         return actividadGuardada;
+    }
+
+    @Transactional
+    public Actividad actualizarActividad(Actividad actividad, ActividadPostDTO dto, TipoActividadEnum tipoEsperado) {
+        if (actividad == null) {
+            throw new IllegalArgumentException("La actividad a actualizar no puede ser nula.");
+        }
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos de la actividad son obligatorios.");
+        }
+        if (dto.titulo() == null || dto.titulo().isBlank()) {
+            throw new IllegalArgumentException("El título de la actividad es obligatorio.");
+        }
+        if (dto.titulo().trim().length() > 150) {
+            throw new IllegalArgumentException("El título de la actividad no puede exceder 150 caracteres.");
+        }
+        if (dto.fechaInicio() != null && dto.fechaFin() != null && dto.fechaFin().isBefore(dto.fechaInicio())) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
+        }
+
+        if (dto.tipoActividad() != null && tipoEsperado != null && dto.tipoActividad() != tipoEsperado) {
+            throw new IllegalArgumentException("El tipo de actividad debe ser " + tipoEsperado + ".");
+        }
+        TipoActividadEnum tipo = dto.tipoActividad() != null ? dto.tipoActividad() : tipoEsperado;
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de actividad es obligatorio.");
+        }
+
+        actividad.setTitulo(dto.titulo().trim());
+        actividad.setDescripcion(dto.descripcion());
+
+        if (dto.hexColor() != null && !dto.hexColor().isBlank()) {
+            String color = dto.hexColor().trim();
+            if (color.length() != 7 || !color.startsWith("#")) {
+                throw new IllegalArgumentException("El color hexadecimal de la actividad debe tener formato #RRGGBB.");
+            }
+            actividad.setHexColor(color);
+        } else {
+            actividad.setHexColor("#3B82F6");
+        }
+
+        actividad.setFechaInicio(dto.fechaInicio());
+        actividad.setFechaFin(dto.fechaFin());
+        actividad.setTipoActividad(tipo);
+
+        if (dto.etiquetas() == null || dto.etiquetas().isEmpty()) {
+            actividad.getEtiquetas().clear();
+        } else {
+            Set<Etiqueta> etiquetas = etiquetaService.obtenerOCrearEtiquetas(dto.etiquetas());
+            actividad.setEtiquetas(etiquetas);
+        }
+
+        actividad.setRecurrencia(null);
+        actividadRepository.flush();
+        recurrenciaRepository.eliminarPorIdActividad(actividad.getId());
+        recurrenciaRepository.flush();
+        if (dto.recurrencia() != null) {
+            recurrenciaService.guardarRecurrencia(actividad, dto.recurrencia());
+        }
+
+        actividad.getRecordatorios().clear();
+        recordatorioRepository.eliminarPorIdActividad(actividad.getId());
+        recordatorioRepository.flush();
+        if (dto.recordatorios() != null && !dto.recordatorios().isEmpty()) {
+            recordatorioService.guardarRecordatorios(actividad, dto.recordatorios());
+        }
+
+        return actividadRepository.save(actividad);
     }
 }

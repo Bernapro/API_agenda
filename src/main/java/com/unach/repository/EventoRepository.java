@@ -18,7 +18,8 @@ public interface EventoRepository extends JpaRepository<Evento, Integer> {
         SELECT e
         FROM Evento e
         JOIN FETCH e.actividad a
-        WHERE a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+        WHERE a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY e.idActividad ASC
     """)
     List<Evento> obtenerPrimerosResumen(
@@ -32,7 +33,8 @@ public interface EventoRepository extends JpaRepository<Evento, Integer> {
         FROM Evento e
         JOIN FETCH e.actividad a
         WHERE e.idActividad > :ultimoId
-          AND a.fechaInicio BETWEEN :fechaInicio AND :fechaFin
+          AND a.fechaInicio <= :fechaFin
+          AND COALESCE(a.fechaFin, a.fechaInicio) >= :fechaInicio
         ORDER BY e.idActividad ASC
     """)
     List<Evento> obtenerResumenDespuesDeId(

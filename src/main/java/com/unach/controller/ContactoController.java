@@ -5,12 +5,15 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.unach.dto.ContactoGetDTO;
 import com.unach.dto.ContactoGetResumenDTO;
 import com.unach.dto.ContactoPostDTO;
 import com.unach.dto.ContactoPostResponseDTO;
@@ -50,5 +53,19 @@ public class ContactoController {
     public ResponseEntity<List<ContactoGetResumenDTO>> buscarPorEtiqueta(@RequestParam String etiqueta) {
         List<ContactoGetResumenDTO> coincidencias = contactoService.buscarPorEtiqueta(etiqueta);
         return ResponseEntity.ok(coincidencias);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ContactoGetDTO> obtenerContacto(@PathVariable Integer id) {
+        ContactoGetDTO contacto = contactoService.obtenerContactoPorId(id);
+        return ResponseEntity.ok(contacto);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ContactoGetDTO> actualizarContacto(
+            @PathVariable Integer id,
+            @RequestBody ContactoPostDTO dto) {
+        ContactoGetDTO actualizado = contactoService.actualizarContacto(id, dto);
+        return ResponseEntity.ok(actualizado);
     }
 }

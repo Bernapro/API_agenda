@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.unach.dto.NoTelefonicoGetDTO;
 import com.unach.dto.NoTelefonicoPostDTO;
 import com.unach.entity.Contacto;
 import com.unach.entity.NoTelefonico;
@@ -55,5 +56,32 @@ public class NoTelefonicoService {
         }
 
         return noTelefonicoRepository.saveAll(telefonos);
+    }
+
+    @Transactional
+    public List<NoTelefonico> reemplazarNumerosTelefonicos(Contacto contacto, List<NoTelefonicoPostDTO> telefonosDto) {
+        if (contacto == null || contacto.getId() == null) {
+            throw new IllegalArgumentException("El contacto debe existir antes de actualizar sus números telefónicos.");
+        }
+        noTelefonicoRepository.eliminarPorIdContacto(contacto.getId());
+        noTelefonicoRepository.flush();
+        contacto.getNumerosTelefonicos().clear();
+        List<NoTelefonico> nuevos = guardarNumerosTelefonicos(contacto, telefonosDto);
+        contacto.getNumerosTelefonicos().addAll(nuevos);
+        return nuevos;
+    }
+
+    public List<NoTelefonicoGetDTO> mapearADTOList(List<NoTelefonico> telefonos) {
+        if (telefonos == null || telefonos.isEmpty()) {
+            return List.of();
+        }
+        return telefonos.stream()
+                .map(t -> new NoTelefonicoGetDTO(
+                        t.getId() != null ? t.getId().getDisc() : null,
+                        t.getPrefijo(),
+                        t.getNoTelefonico(),
+                        t.getTipo()
+                ))
+                .toList();
     }
 }

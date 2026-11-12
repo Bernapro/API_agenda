@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.unach.dto.DireccionGetDTO;
 import com.unach.dto.DireccionPostDTO;
 import com.unach.entity.Contacto;
 import com.unach.entity.Direccion;
@@ -66,5 +67,37 @@ public class DireccionService {
         }
 
         return direccionRepository.saveAll(direcciones);
+    }
+
+    @Transactional
+    public List<Direccion> reemplazarDirecciones(Contacto contacto, List<DireccionPostDTO> direccionesDto) {
+        if (contacto == null || contacto.getId() == null) {
+            throw new IllegalArgumentException("El contacto debe existir antes de actualizar sus direcciones.");
+        }
+        direccionRepository.eliminarPorIdContacto(contacto.getId());
+        direccionRepository.flush();
+        contacto.getDirecciones().clear();
+        List<Direccion> nuevas = guardarDirecciones(contacto, direccionesDto);
+        contacto.getDirecciones().addAll(nuevas);
+        return nuevas;
+    }
+
+    public List<DireccionGetDTO> mapearADTOList(List<Direccion> direcciones) {
+        if (direcciones == null || direcciones.isEmpty()) {
+            return List.of();
+        }
+        return direcciones.stream()
+                .map(d -> new DireccionGetDTO(
+                        d.getId() != null ? d.getId().getDisc() : null,
+                        d.getDireccion(),
+                        d.getSegundaLinea(),
+                        d.getApartadoPostal(),
+                        d.getCodigoPostal(),
+                        d.getCiudad(),
+                        d.getEstado(),
+                        d.getPais(),
+                        d.getTipo()
+                ))
+                .toList();
     }
 }
